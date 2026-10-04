@@ -1,0 +1,161 @@
+{
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        50,
+        140
+      ],
+      "size": [
+        300,
+        160
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 2,
+      "type": "MaxineEyeContact",
+      "pos": [
+        430,
+        140
+      ],
+      "size": [
+        430,
+        500
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MaxineEyeContact"
+      },
+      "widgets_values": [
+        false,
+        true,
+        3,
+        true,
+        true,
+        "Maximum (CRF 1)",
+        40,
+        true
+      ]
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        930,
+        140
+      ],
+      "size": [
+        340,
+        260
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/Maxine-EyeContact",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "Note",
+      "pos": [
+        50,
+        700
+      ],
+      "size": [
+        1150,
+        310
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "properties": {},
+      "widgets_values": [
+        "Local NVIDIA Maxine Eye Contact NIM 1.5.0 must be installed and ready.\nOriginal resolution; maximum-quality input conversion; lossless output; temporal filtering and closed-eye detection on.\nPreserve iris color: experimental CPU colour matching; compare a short clip and inspect blinking/iris edges.\nHover controls or expand Parameter help for explanations.\nSave Video: format auto / codec auto to preserve the corrected stream.\nThe progress panel counts received encoded frames when metadata is available, and waits honestly during warm-up.\nNo cloud uploads; configure a localhost endpoint or an SSH tunnel."
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9,
+      "offset": [
+        40,
+        60
+      ]
+    }
+  },
+  "version": 0.4
+}

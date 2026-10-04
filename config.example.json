@@ -1,0 +1,6 @@
+{
+  "client_python": "/absolute/path/to/ComfyUI-Maxine-EyeContact/runtime/bin/python",
+  "target": "127.0.0.1:18061",
+  "timeout_seconds": 1800,
+  "comfy_url": "http://127.0.0.1:8188"
+}

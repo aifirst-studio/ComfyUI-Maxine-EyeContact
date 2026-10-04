@@ -1,0 +1,16 @@
+{
+  "repository": "https://github.com/NVIDIA-Maxine/nim-clients",
+  "commit": "d02b7d57541b8598ac4c057947b10b2e42ccb1ee",
+  "files": [
+    "LICENSE.md",
+    "ThirdPartyLicenses.txt",
+    "eye-contact/protos/linux/compile_protos.sh",
+    "eye-contact/protos/proto/nvidia/ai4m/common/v1/service_info.proto",
+    "eye-contact/protos/proto/nvidia/maxine/eyecontact/v1/eyecontact.proto",
+    "eye-contact/protos/windows/compile_protos.bat",
+    "eye-contact/requirements.txt",
+    "eye-contact/scripts/config.py",
+    "eye-contact/scripts/constants.py",
+    "eye-contact/scripts/eye-contact.py"
+  ]
+}

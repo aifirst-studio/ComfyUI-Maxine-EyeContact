@@ -1,0 +1,25 @@
+services:
+  eye-contact:
+    image: ${MAXINE_IMAGE:-nvcr.io/nim/nvidia/maxine-eye-contact:1.5.0}
+    container_name: maxine-eye-contact-nim
+    restart: "no"
+    runtime: nvidia
+    shm_size: 8gb
+    environment:
+      NGC_API_KEY: ${NGC_API_KEY:?Run configure_ngc.py to set the NGC key first}
+      NIM_HTTP_API_PORT: "8000"
+      NIM_CACHE_PATH: /opt/nim/.cache
+      NV_AI4M_MAX_CONCURRENCY_PER_GPU: "1"
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility,video
+    ports:
+      - "127.0.0.1:${MAXINE_HTTP_PORT:-18060}:8000"
+      - "127.0.0.1:${MAXINE_GRPC_PORT:-18061}:8001"
+    volumes:
+      - ./cache:/opt/nim/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${MAXINE_GPU_ID:-0}"]
+              capabilities: [gpu]
