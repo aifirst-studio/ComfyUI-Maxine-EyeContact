@@ -124,7 +124,7 @@
       "mode": 0,
       "properties": {},
       "widgets_values": [
-        "Local NVIDIA Maxine Eye Contact NIM 1.5.0 must be installed and ready.\nOriginal resolution; maximum-quality input conversion; lossless output; temporal filtering and closed-eye detection on.\nPreserve iris color: experimental CPU colour matching; compare a short clip and inspect blinking/iris edges.\nHover controls or expand Parameter help for explanations.\nSave Video: format auto / codec auto to preserve the corrected stream.\nThe progress panel counts received encoded frames when metadata is available, and waits honestly during warm-up.\nNo cloud uploads; configure a localhost endpoint or an SSH tunnel."
+        "Local NVIDIA Maxine Eye Contact NIM 1.5.0 must be installed and ready.\nOriginal resolution; maximum-quality input conversion; lossless NIM output; temporal filtering and closed-eye detection on.\nPreserve iris color: experimental CPU colour matching; adds a CRF 1 encode, so the final output is not mathematically lossless. Compare a short clip and inspect blinking/iris edges.\nUse even dimensions for compatible H.264 High/YUV420 colour output; exact odd dimensions require High 4:4:4 and may not play in browsers/Windows players.\nHover controls or expand Parameter help for explanations.\nSave Video: format auto / codec auto to preserve the corrected stream.\nThe progress panel counts received encoded frames when metadata is available, and waits honestly during warm-up.\nNo cloud uploads; configure a localhost endpoint or an SSH tunnel."
       ]
     }
   ],

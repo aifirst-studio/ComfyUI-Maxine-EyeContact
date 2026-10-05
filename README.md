@@ -2,6 +2,8 @@
 
 Local eye-contact correction for recorded video using **NVIDIA Maxine Eye Contact NIM**.
 
+**Early beta (0.1.1).** The tested configurations and remaining verification limits are listed below.
+
 **Load Video → NVIDIA Maxine Eye Contact (Local) → Save Video**
 
 - Native ComfyUI `VIDEO` input/output, original resolution and frame rate, source audio.
@@ -97,6 +99,8 @@ Hover tooltips and expand **Parameter help** in the node. Explanations follow NV
 
 There is **no resolution cap or downscaling** in this node. It sends the original input dimensions to NIM and rejects outputs that unexpectedly change dimensions, frame count or frame rate. Odd dimensions are padded to even sizes for H.264 and restored afterward. A preceding resize node changes the input resolution; this node cannot recover lost detail.
 
+Restoring an odd width or height requires a separate H.264 High 4:4:4 Predictive/YUV444 encode to retain the exact dimensions. That output has limited browser/Windows-player compatibility, including when iris-colour matching is on. Use even dimensions for the compatible High/YUV420 colour export.
+
 3840×2160 media handling is covered by a CPU test with a mock NIM. This is **not** evidence that NVIDIA inference succeeds at 4K on every GPU. Resolution limits, memory and NVENC/NVDEC support belong to the service/GPU; failures are reported rather than silently downscaled.
 
 NIM needs constant-frame-rate **8-bit SDR H.264**. Compatible YUV420 H.264 is copied. Other inputs are converted at the original resolution; VFR is normalized to the declared frame rate. Native VIDEO crops/trims/components are exported at the selected high quality. HDR is rejected until explicitly tone-mapped upstream. 10-bit SDR is converted to 8-bit. CRF 1 is very high quality, **not mathematically lossless**; lossless output does not undo these input limitations.
@@ -127,6 +131,8 @@ node tests/test_ui.mjs
 
 These tests cover streaming/protocol errors, partial-output cleanup, existing-file preservation, localhost enforcement, service/request locks, startup guards, MP4 progress parsing and frontend status/help behavior. They need no GPU or NGC key.
 With the full client installed, they also test iris matching, skipped blinks/missing landmarks, unchanged pupil positions/skin regions, and the actual CPU colour-worker encoding path. A gRPC-only installation skips colour tests.
+
+All 22 CPU tests and the frontend tests passed on Linux and Windows. Real NIM output and the corrected colour export were checked at 1440×2560, 30 fps on a Linux host with an RTX 3090. The Windows client has CPU test coverage; a Windows-to-Linux NIM workflow has not been verified end to end. Real 4K inference and other GPU configurations remain unverified.
 
 CPU media integration against an actual ComfyUI checkout:
 
