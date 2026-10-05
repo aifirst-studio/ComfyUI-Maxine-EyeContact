@@ -31,7 +31,14 @@ NIM **1.5.0** is the default service version. The downloaded image is pinned by 
    python -m pip install -r requirements.txt
    ```
 
-3. From the project directory, create the isolated client:
+3. On Debian/Ubuntu, the CPU iris-colour step also needs MediaPipe's EGL/GLES shared libraries, including on headless hosts:
+
+   ```sh
+   sudo apt-get update
+   sudo apt-get install -y --no-install-recommends libegl1 libgles2
+   ```
+
+   Windows does not need this system-package step. From the project directory, create the isolated client:
 
    ```sh
    # Linux, using Python 3.11 or 3.12

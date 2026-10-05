@@ -5,6 +5,7 @@
 - Fix iris-colour exports that browsers/Windows players could not play: H.264 High/YUV420, CRF 1, original resolution and frame rate.
 - Explain that the compatible colour-corrected export is very high quality rather than mathematically lossless.
 - Document beta verification limits and the player-compatibility limitation for exact odd dimensions.
+- Install MediaPipe's Linux EGL/GLES shared libraries in CI and document them for headless Debian/Ubuntu clients.
 
 ## 0.1.0
 
