@@ -163,7 +163,12 @@ try:
             after = nodes.media_info(results[-1])
             assert (after['width'],after['height'],after['frames'],after['fps']) == (before['width'],before['height'],before['frames'],before['fps'])
             assert audio_hash(video_file) == audio_hash(results[-1])
+            with nodes.av.open(str(results[-1])) as container:
+                stream = container.streams.video[0]
+                assert stream.codec_context.profile == 'High'
+                assert stream.codec_context.format.name == 'yuv420p'
             report['checks']['node_with_iris_color_pipeline_and_AAC_packet_identity'] = True
+            report['checks']['iris_color_H264_High_YUV420_export'] = True
         config['target']='example.com:8001'; config_path.write_text(json.dumps(config))
         try:
             node.correct(InputImpl.VideoFromFile(str(video_file)))

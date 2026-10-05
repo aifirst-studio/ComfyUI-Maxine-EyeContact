@@ -36,6 +36,9 @@ class ColorWorkerTests(unittest.TestCase):
             with av.open(str(output)) as container:
                 stream = container.streams.video[0]
                 self.assertEqual((stream.width,stream.height,stream.average_rate), (320,240,25))
+                self.assertEqual(stream.codec_context.name, 'h264')
+                self.assertEqual(stream.codec_context.profile, 'High')
+                self.assertEqual(stream.codec_context.format.name, 'yuv420p')
                 self.assertEqual(len(list(container.decode(stream))), 5)
             status = json.loads((root / 'progress.json').read_text())
             self.assertEqual(status['frames'], 5)

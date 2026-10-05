@@ -33,8 +33,10 @@ def run(source, corrected, output, model, progress):
                 raise RuntimeError('Iris colour matching requires matching resolution and frame rate.')
             stream = destination.add_stream('libx264', rate=sb.average_rate)
             stream.width, stream.height = sb.width, sb.height
-            stream.pix_fmt = 'yuv444p'
-            stream.options = {'crf': '0', 'preset': 'fast', 'threads': '4'}
+            # Lossless x264 selects High 4:4:4 Predictive, which normal browser
+            # players cannot decode. CRF 1 retains very high quality in High/420.
+            stream.pix_fmt = 'yuv420p'
+            stream.options = {'crf': '1', 'preset': 'slow', 'profile': 'high', 'threads': '4'}
             stream.codec_context.colorspace = sb.codec_context.colorspace
             stream.codec_context.color_range = sb.codec_context.color_range
             for frame_a, frame_b in zip_longest(a.decode(sa), b.decode(sb)):

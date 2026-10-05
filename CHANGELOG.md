@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Fix iris-colour exports that browsers/Windows players could not play: H.264 High/YUV420, CRF 1, original resolution and frame rate.
+- Explain that the compatible colour-corrected export is very high quality rather than mathematically lossless.
+
 ## 0.1.0
 
 - Native VIDEO eye-contact correction using local NVIDIA NIM 1.5.0.
