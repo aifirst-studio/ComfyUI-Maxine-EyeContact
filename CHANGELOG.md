@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Add an independent systemd idle-monitor example so stopping a service-managed ComfyUI does not kill its shutdown monitor.
+- Document monitor lifetime under process-group supervisors and containers.
+
 ## 0.2.0
 
 - Add opt-in same-host Linux automatic NIM startup and shutdown after 10 minutes idle.

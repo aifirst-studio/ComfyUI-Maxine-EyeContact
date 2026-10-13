@@ -2,7 +2,7 @@
 
 Local eye-contact correction for recorded video using **NVIDIA Maxine Eye Contact NIM**.
 
-**Early beta (0.2.0).** The tested configurations and remaining verification limits are listed below.
+**Early beta (0.2.1).** The tested configurations and remaining verification limits are listed below.
 
 **Load Video → NVIDIA Maxine Eye Contact (Local) → Save Video**
 
@@ -98,7 +98,16 @@ ComfyUI and NIM must run on the **same Linux host**, under an account with local
 
 Each Maxine node execution starts the pinned, cached service when needed, releases ComfyUI's cached models before a cold start, and waits for real gRPC `SERVING` readiness. Model loading shows a waiting stage with elapsed time. It never downloads a Docker image, installs packages or restarts ComfyUI during a job; initialize the NVIDIA model cache beforehand. A first cold start may take several minutes. Existing workflows and quality defaults are unchanged.
 
-A small local monitor stops only the claimed container after ten minutes without node activity and with the ComfyUI queue empty. The activity lock protects the **whole node**, including video export and colour matching; a cancelled job releases its lease and starts a fresh idle interval. Pending/running ComfyUI work postpones shutdown. An unreachable queue fails closed and retries while its client process is alive, so shutdown can be later than ten minutes. The monitor survives a ComfyUI exit and may release the GPU after the timeout once that client's exit is proven using its Linux PID/start time. It uses no GPU and writes a bounded `service/auto-service.log`.
+A small local monitor stops only the claimed container after ten minutes without node activity and with the ComfyUI queue empty. The activity lock protects the **whole node**, including video export and colour matching; a cancelled job releases its lease and starts a fresh idle interval. Pending/running ComfyUI work postpones shutdown. An unreachable queue fails closed and retries while its client process is alive, so shutdown can be later than ten minutes. The background monitor survives an ordinary ComfyUI process exit and may release the GPU after the timeout once that client's exit is proven using its Linux PID/start time. It uses no GPU and writes a bounded `service/auto-service.log`.
+
+**ComfyUI managed by systemd or a container:** a supervisor can kill ComfyUI's entire process group, including its background monitor. Run the monitor independently if idle shutdown must work after stopping ComfyUI. For systemd, copy `service/maxine-eye-contact-idle.service.example` to `/etc/systemd/system/maxine-eye-contact-idle.service`, replace `YOUR_COMFY_USER` and all absolute paths, and enable it once:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable --now maxine-eye-contact-idle.service
+```
+
+Set this up before the first automatic job, or while ComfyUI is stopped and NIM is idle. The unit and the node use the same monitor lock, so only one watcher controls the service. For container-based ComfyUI, place the watcher in a separate supervisor with the same installation, activity lock and local Docker access; that deployment has not been verified here.
 
 Existing manual start/stop controls still work when idle. A manual container restart cancels ownership of its previous instance; the next Maxine node execution resumes automatic management. Stop the service before a GPU handoff, holding the same `service/activity.lock` for that entire operation. Uncoordinated external gRPC clients are not covered by this node's lease; do not enable idle shutdown for a service shared with them. Disable automation by setting `enabled` to `false`; this leaves the container's current state unchanged. After installing updated Python code, restart ComfyUI once with its queue empty.
 

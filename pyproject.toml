@@ -1,6 +1,6 @@
 [project]
 name = "maxine-eye-contact"
-version = "0.2.0"
+version = "0.2.1"
 description = "Local NVIDIA Maxine Eye Contact for ComfyUI VIDEO with progress and experimental iris-colour preservation. Requires a separately configured NVIDIA NIM service."
 readme = "README.md"
 license = { file = "LICENSE" }

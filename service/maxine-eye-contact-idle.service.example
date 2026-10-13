@@ -1,0 +1,19 @@
+[Unit]
+Description=Maxine Eye Contact idle monitor
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=YOUR_COMFY_USER
+WorkingDirectory=/absolute/path/to/ComfyUI-Maxine-EyeContact
+ExecStart=/absolute/path/to/ComfyUI-Maxine-EyeContact/runtime/bin/python /absolute/path/to/ComfyUI-Maxine-EyeContact/auto_service.py --watch
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/absolute/path/to/ComfyUI-Maxine-EyeContact/service
+
+[Install]
+WantedBy=multi-user.target
