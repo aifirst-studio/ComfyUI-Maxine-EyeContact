@@ -2,7 +2,7 @@
 
 Local eye-contact correction for recorded video using **NVIDIA Maxine Eye Contact NIM**.
 
-**Early beta (0.1.1).** The tested configurations and remaining verification limits are listed below.
+**Early beta (0.1.2).** The tested configurations and remaining verification limits are listed below.
 
 **Load Video → NVIDIA Maxine Eye Contact (Local) → Save Video**
 
@@ -24,7 +24,11 @@ NIM **1.5.0** is the default service version. The downloaded image is pinned by 
 
 ## Install
 
-1. Put this project in `ComfyUI/custom_nodes/ComfyUI-Maxine-EyeContact`.
+In ComfyUI-Manager, search for **Maxine Eye Contact (Local)** or the Registry ID `maxine-eye-contact`. Published Registry versions appear on the [Registry listing](https://registry.comfy.org/nodes/maxine-eye-contact). The legacy Manager catalogue submission is [PR #3374](https://github.com/Comfy-Org/ComfyUI-Manager/pull/3374); availability in that list depends on its acceptance. If the package is not listed yet, use Manager's **Install via Git URL** with `https://github.com/aifirst-studio/ComfyUI-Maxine-EyeContact`, or install this repository manually.
+
+**Manager installs the node and its small ComfyUI dependency only.** It does not configure the isolated client, NVIDIA NIM, Docker/GPU access, NGC credentials or Linux system libraries. Complete steps 3–5 below after a Manager install. There is no runtime pip installation, automatic service startup or automatic NVIDIA model download in the node.
+
+1. Put this project in `ComfyUI/custom_nodes/ComfyUI-Maxine-EyeContact`. Registry installs may instead use `custom_nodes/maxine-eye-contact`; run the remaining setup commands from the actual installed directory.
 2. In **ComfyUI's Python**, install the small FFmpeg helper:
 
    ```sh
@@ -148,6 +152,12 @@ CPU media integration against an actual ComfyUI checkout:
 ```
 
 Run this in a **staging copy** with an installed client. It temporarily points that copy's configuration at a local mock server and restores it afterward. It covers original 4K dimensions, 29.97 fps, audio packet identity, native trims/crops/components, odd dimensions, cancellation and real MP4 metadata counting. It does not load NVIDIA's model. Real NIM gaze quality, GPU memory and first-use behavior still require testing with actual footage.
+
+## Registry publishing (maintainers)
+
+Create the `aifirst-studio` publisher in [Comfy Registry](https://registry.comfy.org/nodes), then create its publishing API key and store it as the GitHub Actions repository secret `REGISTRY_ACCESS_TOKEN`. Follow Comfy's [publishing guide](https://docs.comfy.org/registry/publishing). Keep this key out of source files, logs and chat.
+
+The **Publish to Comfy Registry** workflow is manual (`workflow_dispatch`). Run it for a reviewed, tested commit after incrementing the three-part version in `pyproject.toml`; Registry versions cannot be overwritten. `.comfyignore` excludes development files and private/generated state from the Registry archive while retaining the manual client/service setup tools, protocols, example workflow and licence notices. The Registry key is separate from the NVIDIA NGC key.
 
 ## Attribution
 

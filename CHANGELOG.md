@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Add Comfy Registry metadata, package exclusions and a manual publishing workflow.
+- Document Manager installation, the catalogue submission and the separate client/NVIDIA setup steps.
+
 ## 0.1.1
 
 - Fix iris-colour exports that browsers/Windows players could not play: H.264 High/YUV420, CRF 1, original resolution and frame rate.
