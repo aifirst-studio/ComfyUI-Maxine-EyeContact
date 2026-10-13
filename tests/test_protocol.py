@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +44,7 @@ class ProtocolTest(unittest.TestCase):
         self.service = EchoService()
         rpc.add_MaxineEyeContactServiceServicer_to_server(self.service, self.server)
         status = health.HealthServicer()
+        self.health = status
         status.set('', health_pb2.HealthCheckResponse.SERVING)
         health_pb2_grpc.add_HealthServicer_to_server(status, self.server)
         port = self.server.add_insecure_port('127.0.0.1:0')
@@ -78,6 +80,27 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(progress['received_bytes'], self.source.stat().st_size)
         self.assertEqual(progress['sent_bytes'], self.source.stat().st_size)
         self.assertIsNone(progress['frames'], 'Arbitrary bytes must not be interpreted as video frames')
+
+    def test_wait_ready_waits_for_actual_serving_status(self):
+        self.health.set('', health_pb2.HealthCheckResponse.NOT_SERVING)
+        timer = threading.Timer(0.5, lambda: self.health.set('', health_pb2.HealthCheckResponse.SERVING))
+        timer.start()
+        try:
+            result = subprocess.run([sys.executable, str(ROOT / 'worker.py'), '--target', self.target,
+                                     '--health', '--wait-ready', '--ready-timeout', '5'],
+                                    capture_output=True, text=True, timeout=10)
+        finally:
+            timer.cancel()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('SERVING', result.stdout)
+
+    def test_wait_ready_timeout_is_an_error(self):
+        self.health.set('', health_pb2.HealthCheckResponse.NOT_SERVING)
+        result = subprocess.run([sys.executable, str(ROOT / 'worker.py'), '--target', self.target,
+                                 '--health', '--wait-ready', '--ready-timeout', '0.2'],
+                                capture_output=True, text=True, timeout=5)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('startup timeout', result.stderr)
 
     def test_server_error_removes_partial_output(self):
         self.service.mode = 'error'

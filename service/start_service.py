@@ -8,16 +8,23 @@ import time
 import urllib.request
 
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT.parent))
-from activity import service_activity
+if __package__ and '.' in __package__:
+    from ..activity import service_activity
+else:
+    sys.path.insert(0, str(ROOT.parent))
+    from activity import service_activity
 
 
-def require_idle_comfy():
+def comfy_queue():
     config_path = ROOT.parent / 'config.json'
     config = json.loads(config_path.read_text(encoding='utf-8')) if config_path.exists() else {}
     url = config.get('comfy_url', 'http://127.0.0.1:8188').rstrip('/')
     with urllib.request.urlopen(url + '/queue', timeout=10) as response:
-        queue = json.load(response)
+        return json.load(response)
+
+
+def require_idle_comfy():
+    queue = comfy_queue()
     if queue['queue_running'] or queue['queue_pending']:
         raise RuntimeError('ComfyUI has queued or running jobs. Start Maxine when these are finished.')
 
@@ -35,34 +42,41 @@ def start(cached_only=False, update_image=False):
     if not (ROOT / '.env').is_file():
         raise RuntimeError('Run configure_ngc.py first. No NGC key is configured.')
     with service_activity(exclusive=True):
-        require_idle_comfy()
-        require_host_gpu()
-        environment = os.environ.copy()
-        environment['DOCKER_CONFIG'] = str(ROOT / '.docker')
-        (ROOT / 'cache').mkdir(exist_ok=True)
-        (ROOT / 'cache').chmod(0o777)
-        image_record = ROOT / 'image.json'
-        if image_record.exists() and not update_image:
-            environment['MAXINE_IMAGE'] = json.loads(image_record.read_text())['digest']
-        image = 'nvcr.io/nim/nvidia/maxine-eye-contact:latest' if update_image else environment.get('MAXINE_IMAGE', 'nvcr.io/nim/nvidia/maxine-eye-contact:1.5.0')
-        environment['MAXINE_IMAGE'] = image
-        command = ['docker', 'compose', '--project-name', 'maxine-eye-contact', '--env-file', str(ROOT / '.env'),
-                   '-f', str(ROOT / 'compose.yaml')]
-        subprocess.run(command + ['config', '--quiet'], env=environment, check=True)
-        cached = subprocess.run(['docker', 'image', 'inspect', image], env=environment,
-                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
-        if not cached or update_image:
-            if cached_only:
-                raise RuntimeError('The pinned NVIDIA image is missing. Run start_service.py manually to download it first.')
-            subprocess.run(command + ['pull', 'eye-contact'], env=environment, check=True)
-        digests = json.loads(subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{json .RepoDigests}}', image],
-                                                    env=environment, text=True))
-        digest = next(value for value in digests if value.startswith('nvcr.io/nim/nvidia/maxine-eye-contact@'))
-        image_record.write_text(json.dumps({'digest': digest}, indent=2) + '\n')
-        environment['MAXINE_IMAGE'] = digest
-        require_idle_comfy()
-        require_host_gpu()
-        subprocess.run(command + ['up', '-d', '--pull', 'never', '--no-build', 'eye-contact'], env=environment, check=True)
+        start_locked(cached_only, update_image)
+
+
+def start_locked(cached_only=False, update_image=False, queue_check=None):
+    queue_check = queue_check or require_idle_comfy
+    queue_check()
+    require_host_gpu()
+    if not (ROOT / '.env').is_file():
+        raise RuntimeError('Run configure_ngc.py first. No NGC key is configured.')
+    environment = os.environ.copy()
+    environment['DOCKER_CONFIG'] = str(ROOT / '.docker')
+    (ROOT / 'cache').mkdir(exist_ok=True)
+    (ROOT / 'cache').chmod(0o777)
+    image_record = ROOT / 'image.json'
+    if image_record.exists() and not update_image:
+        environment['MAXINE_IMAGE'] = json.loads(image_record.read_text())['digest']
+    image = 'nvcr.io/nim/nvidia/maxine-eye-contact:latest' if update_image else environment.get('MAXINE_IMAGE', 'nvcr.io/nim/nvidia/maxine-eye-contact:1.5.0')
+    environment['MAXINE_IMAGE'] = image
+    command = ['docker', 'compose', '--project-name', 'maxine-eye-contact', '--env-file', str(ROOT / '.env'),
+               '-f', str(ROOT / 'compose.yaml')]
+    subprocess.run(command + ['config', '--quiet'], env=environment, check=True, timeout=30)
+    cached = subprocess.run(['docker', 'image', 'inspect', image], env=environment,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30).returncode == 0
+    if not cached or update_image:
+        if cached_only:
+            raise RuntimeError('The pinned NVIDIA image is missing. Run start_service.py manually to download it first.')
+        subprocess.run(command + ['pull', 'eye-contact'], env=environment, check=True)
+    digests = json.loads(subprocess.check_output(['docker', 'image', 'inspect', '--format', '{{json .RepoDigests}}', image],
+                                                env=environment, text=True, timeout=30))
+    digest = next(value for value in digests if value.startswith('nvcr.io/nim/nvidia/maxine-eye-contact@'))
+    image_record.write_text(json.dumps({'digest': digest}, indent=2) + '\n')
+    environment['MAXINE_IMAGE'] = digest
+    queue_check()
+    require_host_gpu()
+    subprocess.run(command + ['up', '-d', '--pull', 'never', '--no-build', 'eye-contact'], env=environment, check=True, timeout=90)
 
 
 def main():

@@ -7,6 +7,9 @@ service/.docker/
 service/cache/
 service/activity.lock
 service/image.json
+service/auto-state.json
+service/auto-watch.lock
+service/auto-service.log*
 *.pyc
 .venv/
 .pytest_cache/

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Add opt-in same-host Linux automatic NIM startup and shutdown after 10 minutes idle.
+- Wait for real model readiness with an indeterminate progress stage; keep the service warm between jobs.
+- Protect the whole node execution, cancellation and GPU handoff with the existing activity lock. Refuse remote Docker control and unrelated containers.
+- Retain manual service control and Windows/SSH-tunnel workflows. Setup, credentials and image/model downloads remain explicit.
+
 ## 0.1.2
 
 - Add Comfy Registry metadata, package exclusions and a manual publishing workflow.

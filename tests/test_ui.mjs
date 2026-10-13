@@ -6,6 +6,8 @@ const waiting = statusText({phase: "processing", frames: null, elapsed: 61, sent
 assert.match(waiting.detail, /Warte auf Videoframes/);
 assert.match(waiting.detail, /Übertragen: 100%/);
 assert.match(waiting.detail, /1:01/);
+assert.equal(statusText({phase: 'warming_up', elapsed: 35}, 'de').phase, 'Maxine-Modelle laden');
+assert.equal(statusText({phase: 'starting'}, 'en').phase, 'Starting Maxine when needed');
 const frames = statusText({phase: "processing", frames: 5, total_frames: 10, width: 3840, height: 2160}, "en");
 assert.match(frames.detail, /3840 × 2160/);
 assert.match(frames.detail, /5\/10 Frames/);

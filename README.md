@@ -2,7 +2,7 @@
 
 Local eye-contact correction for recorded video using **NVIDIA Maxine Eye Contact NIM**.
 
-**Early beta (0.1.2).** The tested configurations and remaining verification limits are listed below.
+**Early beta (0.2.0).** The tested configurations and remaining verification limits are listed below.
 
 **Load Video → NVIDIA Maxine Eye Contact (Local) → Save Video**
 
@@ -11,6 +11,7 @@ Local eye-contact correction for recorded video using **NVIDIA Maxine Eye Contac
 - ComfyUI progress bar, stage status, elapsed time, received-frame count where MP4 metadata supports it, and English/German parameter help inside the node.
 - Experimental CPU iris-colour matching to reduce colour changes introduced by gaze redirection; on by default, with conservative skip conditions.
 - Isolated gRPC environment: no protobuf/gRPC changes in ComfyUI's Python environment.
+- Optional automatic service startup and shutdown after ten minutes idle on a shared Linux host.
 
 This is an independent MIT-licensed integration, not an NVIDIA product. No model weights are included. NVIDIA NGC access and NVIDIA's NIM/model terms apply separately.
 
@@ -26,7 +27,7 @@ NIM **1.5.0** is the default service version. The downloaded image is pinned by 
 
 In ComfyUI-Manager, search for **Maxine Eye Contact (Local)** or the Registry ID `maxine-eye-contact`. Published Registry versions appear on the [Registry listing](https://registry.comfy.org/nodes/maxine-eye-contact). The legacy Manager catalogue submission is [PR #3374](https://github.com/Comfy-Org/ComfyUI-Manager/pull/3374); availability in that list depends on its acceptance. If the package is not listed yet, use Manager's **Install via Git URL** with `https://github.com/aifirst-studio/ComfyUI-Maxine-EyeContact`, or install this repository manually.
 
-**Manager installs the node and its small ComfyUI dependency only.** It does not configure the isolated client, NVIDIA NIM, Docker/GPU access, NGC credentials or Linux system libraries. Complete steps 3–5 below after a Manager install. There is no runtime pip installation, automatic service startup or automatic NVIDIA model download in the node.
+**Manager installs the node and its small ComfyUI dependency only.** It does not configure the isolated client, NVIDIA NIM, Docker/GPU access, NGC credentials or Linux system libraries. Complete steps 3–5 below after a Manager install. Service automation is opt-in after this one-time setup; runtime pip installation and automatic image updates are not used.
 
 1. Put this project in `ComfyUI/custom_nodes/ComfyUI-Maxine-EyeContact`. Registry installs may instead use `custom_nodes/maxine-eye-contact`; run the remaining setup commands from the actual installed directory.
 2. In **ComfyUI's Python**, install the small FFmpeg helper:
@@ -80,6 +81,26 @@ python3 service/start_service.py --update-image
 ```
 
 This can recreate a running idle NIM container. Normal starts retain the pinned version. `--cached-only --no-wait` is available for existing service consoles. The Linux `service/activity.lock` uses shared request/exclusive control locking; preserve its inode while installing updates. Service actions are refused while a local request is active.
+
+### Automatic service start and idle shutdown (Linux)
+
+After the initial manual startup has completed successfully and filled the model cache, add this object to the installer-generated `config.json`, keeping its other settings:
+
+```json
+"auto_service": {
+  "enabled": true,
+  "idle_timeout_seconds": 600,
+  "startup_timeout_seconds": 600
+}
+```
+
+ComfyUI and NIM must run on the **same Linux host**, under an account with local Docker access. Use the bundled Compose service and a dedicated instance for this node. Automation is off by default; Windows clients and SSH tunnels retain external service management. The node refuses remote Docker contexts and containers belonging to another installation.
+
+Each Maxine node execution starts the pinned, cached service when needed, releases ComfyUI's cached models before a cold start, and waits for real gRPC `SERVING` readiness. Model loading shows a waiting stage with elapsed time. It never downloads a Docker image, installs packages or restarts ComfyUI during a job; initialize the NVIDIA model cache beforehand. A first cold start may take several minutes. Existing workflows and quality defaults are unchanged.
+
+A small local monitor stops only the claimed container after ten minutes without node activity and with the ComfyUI queue empty. The activity lock protects the **whole node**, including video export and colour matching; a cancelled job releases its lease and starts a fresh idle interval. Pending/running ComfyUI work postpones shutdown. An unreachable queue fails closed and retries while its client process is alive, so shutdown can be later than ten minutes. The monitor survives a ComfyUI exit and may release the GPU after the timeout once that client's exit is proven using its Linux PID/start time. It uses no GPU and writes a bounded `service/auto-service.log`.
+
+Existing manual start/stop controls still work when idle. A manual container restart cancels ownership of its previous instance; the next Maxine node execution resumes automatic management. Stop the service before a GPU handoff, holding the same `service/activity.lock` for that entire operation. Uncoordinated external gRPC clients are not covered by this node's lease; do not enable idle shutdown for a service shared with them. Disable automation by setting `enabled` to `false`; this leaves the container's current state unchanged. After installing updated Python code, restart ComfyUI once with its queue empty.
 
 ### Windows client / another Linux host
 
@@ -143,7 +164,7 @@ node tests/test_ui.mjs
 These tests cover streaming/protocol errors, partial-output cleanup, existing-file preservation, localhost enforcement, service/request locks, startup guards, MP4 progress parsing and frontend status/help behavior. They need no GPU or NGC key.
 With the full client installed, they also test iris matching, skipped blinks/missing landmarks, unchanged pupil positions/skin regions, and the actual CPU colour-worker encoding path. A gRPC-only installation skips colour tests.
 
-All 22 CPU tests and the frontend tests passed on Linux and Windows. Real NIM output and the corrected colour export were checked at 1440×2560, 30 fps on a Linux host with an RTX 3090. The Windows client has CPU test coverage; a Windows-to-Linux NIM workflow has not been verified end to end. Real 4K inference and other GPU configurations remain unverified.
+CPU and frontend tests run on Linux and Windows; automatic lifecycle shared-lock tests run on Linux. Real NIM output and the corrected colour export were checked at 1440×2560, 30 fps on a Linux host with an RTX 3090. The Windows client has CPU test coverage; a Windows-to-Linux NIM workflow has not been verified end to end. Real 4K inference and other GPU configurations remain unverified.
 
 CPU media integration against an actual ComfyUI checkout:
 

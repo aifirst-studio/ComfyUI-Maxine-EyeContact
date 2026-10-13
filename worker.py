@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "interfaces"))
 
@@ -33,6 +34,8 @@ def main():
     parser.add_argument("--target", default="127.0.0.1:18061")
     parser.add_argument("--health", action="store_true")
     parser.add_argument("--health-timeout", type=float, default=5)
+    parser.add_argument('--wait-ready', action='store_true', help='Wait for real SERVING health after an automatic container start.')
+    parser.add_argument('--ready-timeout', type=float, default=600)
     parser.add_argument("--input")
     parser.add_argument("--output")
     parser.add_argument("--settings")
@@ -43,6 +46,8 @@ def main():
         parser.error("Only a local Maxine endpoint is allowed.")
     if not 0 < args.health_timeout <= 10:
         parser.error("--health-timeout must be between 0 and 10 seconds.")
+    if args.wait_ready and (not args.health or args.ready_timeout <= 0):
+        parser.error('--wait-ready requires --health and a positive --ready-timeout.')
     if not args.health and not all((args.input, args.output, args.settings)):
         parser.error("--input, --output and --settings are required for inference.")
     if args.health:
@@ -57,6 +62,8 @@ def run_client(args):
     progress.update(force=True, phase="connecting")
     try:
         with grpc.insecure_channel(args.target) as channel:
+            if args.wait_ready:
+                wait_ready(channel, args.ready_timeout)
             grpc.channel_ready_future(channel).result(timeout=args.health_timeout if args.health else 10)
             health = health_pb2_grpc.HealthStub(channel).Check(health_pb2.HealthCheckRequest(), timeout=args.health_timeout)
             if health.status != health_pb2.HealthCheckResponse.SERVING:
@@ -89,6 +96,20 @@ def run_client(args):
         raise RuntimeError("Local Maxine service is unavailable. Configure the NGC key and start the Eye Contact service first.") from None
     except grpc.RpcError as exc:
         raise RuntimeError(f"Maxine gRPC {exc.code().name}: {exc.details()}") from None
+
+
+def wait_ready(channel, timeout):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        remaining = min(2, deadline - time.monotonic())
+        try:
+            health = health_pb2_grpc.HealthStub(channel).Check(health_pb2.HealthCheckRequest(), timeout=remaining)
+            if health.status == health_pb2.HealthCheckResponse.SERVING:
+                return
+        except grpc.RpcError:
+            pass  # NIM can accept connections before its models become ready.
+        time.sleep(min(1, max(0, deadline - time.monotonic())))
+    raise RuntimeError('Maxine did not become ready before the startup timeout. Check docker logs maxine-eye-contact-nim.')
 
 
 if __name__ == "__main__":

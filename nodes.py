@@ -10,9 +10,11 @@ import av
 import folder_paths
 import imageio_ffmpeg
 import comfy.model_management
+from comfy_execution.utils import get_executing_context
 from comfy_api.latest import InputImpl
 from comfy_api.latest._util import VideoContainer, VideoCodec
 from .node_progress import NodeProgress
+from .auto_service import managed_service, settings as service_settings
 
 ROOT = Path(__file__).resolve().parent
 
@@ -111,9 +113,20 @@ class MaxineEyeContact:
                 lossy_bitrate_mbps=40, temporal_filtering=True, preserve_iris_color=True, unique_id=None):
         progress = NodeProgress(unique_id)
         try:
-            return self._correct(video, natural_lookaway, detect_closed_eyes,
-                                 eye_size_sensitivity, lossless_output, input_quality,
-                                 lossy_bitrate_mbps, temporal_filtering, preserve_iris_color, progress)
+            config_path = ROOT / 'config.json'
+            config = json.loads(config_path.read_text(encoding='utf-8')) if config_path.is_file() else {}
+            def prepare_gpu():
+                comfy.model_management.throw_exception_if_processing_interrupted()
+                comfy.model_management.unload_all_models()
+                comfy.model_management.soft_empty_cache()
+            context = get_executing_context()
+            if service_settings(config):
+                progress.update(0, 'starting', indeterminate=True)
+            with managed_service(config, context.prompt_id if context else None, prepare_gpu,
+                                 comfy.model_management.throw_exception_if_processing_interrupted):
+                return self._correct(video, natural_lookaway, detect_closed_eyes,
+                                     eye_size_sensitivity, lossless_output, input_quality,
+                                     lossy_bitrate_mbps, temporal_filtering, preserve_iris_color, progress)
         except BaseException:
             progress.update(phase="error")
             raise
@@ -142,7 +155,13 @@ class MaxineEyeContact:
             raise ValueError("This node only sends video to a local Maxine endpoint (localhost). Use an SSH tunnel for another host.")
         timeout = int(config.get("timeout_seconds", 1800))
         worker = [str(worker_python), str(ROOT / "worker.py"), "--target", target]
-        run_process(worker + ["--health"], 20)
+        automatic = service_settings(config)
+        if automatic:
+            startup_timeout = automatic['startup_timeout_seconds']
+            run_process(worker + ['--health', '--wait-ready', '--ready-timeout', str(startup_timeout)],
+                        startup_timeout + 15, lambda: progress.update(0, 'warming_up', indeterminate=True))
+        else:
+            run_process(worker + ["--health"], 20)
         if preserve_iris_color:
             run_process([str(worker_python), str(ROOT / "color_worker.py"), "--check"], 30)
         progress.update(20, "exporting", indeterminate=True)

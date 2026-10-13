@@ -124,7 +124,7 @@
       "mode": 0,
       "properties": {},
       "widgets_values": [
-        "Local NVIDIA Maxine Eye Contact NIM 1.5.0 must be installed and ready.\nOriginal resolution; maximum-quality input conversion; lossless NIM output; temporal filtering and closed-eye detection on.\nPreserve iris color: experimental CPU colour matching; adds a CRF 1 encode, so the final output is not mathematically lossless. Compare a short clip and inspect blinking/iris edges.\nUse even dimensions for compatible H.264 High/YUV420 colour output; exact odd dimensions require High 4:4:4 and may not play in browsers/Windows players.\nHover controls or expand Parameter help for explanations.\nSave Video: format auto / codec auto to preserve the corrected stream.\nThe progress panel counts received encoded frames when metadata is available, and waits honestly during warm-up.\nNo cloud uploads; configure a localhost endpoint or an SSH tunnel."
+        "Local NVIDIA Maxine Eye Contact NIM 1.5.0 needs one-time client, Docker/NGC and model-cache setup.\nOn a shared Linux host, enable auto_service in config.json: the node starts NIM when needed and stops it after 10 minutes idle. Windows/SSH-tunnel clients use external service management.\nOriginal resolution; maximum-quality conversion; lossless NIM output; temporal filtering and closed-eye detection on.\nPreserve iris color: experimental CPU matching with a compatible CRF 1 export; inspect a short clip.\nHover controls or expand Parameter help. Save Video: format auto / codec auto.\nProgress counts received frames when metadata is available and shows a waiting stage during model loading."
       ]
     }
   ],

@@ -1,9 +1,9 @@
 const phases = {
-    en: {checking: "Checking service", exporting: "Exporting input", reading: "Reading input",
+    en: {starting: "Starting Maxine when needed", warming_up: "Waiting for Maxine models", checking: "Checking service", exporting: "Exporting input", reading: "Reading input",
         preparing: "Preparing original resolution", processing: "Correcting eye contact",
         validating: "Checking corrected frames", audio: "Restoring source audio",
         final_check: "Checking final video", iris_color: "Matching source iris colour", complete: "Complete", error: "Stopped / error"},
-    de: {checking: "Dienst prüfen", exporting: "Eingang exportieren", reading: "Eingang lesen",
+    de: {starting: "Maxine bei Bedarf starten", warming_up: "Maxine-Modelle laden", checking: "Dienst prüfen", exporting: "Eingang exportieren", reading: "Eingang lesen",
         preparing: "Originalauflösung vorbereiten", processing: "Blickkontakt korrigieren",
         validating: "Korrigierte Frames prüfen", audio: "Originalton hinzufügen",
         final_check: "Ergebnis prüfen", iris_color: "Original-Irisfarbe angleichen", complete: "Fertig", error: "Abgebrochen / Fehler"},
